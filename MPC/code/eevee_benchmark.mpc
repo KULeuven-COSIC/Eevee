@@ -1,0 +1,186 @@
+import sys
+import math
+import random
+
+from Programs.Source.eevee_aes import jolteon_forkaes64_dec, espeon_forkaes64_dec
+from Programs.Source.aes_gcm import aes_gcm_128_decrypt
+from Programs.Source.aes_gcm_siv import aes_gcm_siv_128_decrypt
+from Programs.Source.eevee_gf2n import umbreon_dec_forkskinny_64_192_n48, umbreon_dec_forkskinny_128_256_n112, jolteon_dec_forkskinny_64_192_n48, jolteon_dec_forkskinny_128_256_n112, espeon_forkskinny_128_384
+import Programs.Source.forkskinny_gf2n as fk
+
+if len(sys.argv) < 4:
+    print(f'Usage: ./compile.py [compile args] eevee_benchmark <circuit> <simd> <message length in byte>')
+    sys.exit(1)
+idx = 1
+while sys.argv[idx] != 'eevee_benchmark':
+    idx += 1
+
+circuit = sys.argv[idx+1]
+simd = int(sys.argv[idx+2])
+message_length = int(sys.argv[idx+3])
+
+random.seed(message_length)
+
+print(f'Compiling {circuit}, SIMD={simd}, message length={message_length} bytes')
+
+def random_bytes(n, type, size=None, embed=None):
+    em = embed if embed != None else lambda x: x
+    if size == None:
+        return [type(em(random.randint(0,15))) for i in range(n)]
+    else:
+        return [type(em(random.randint(0,15)),size=size) for i in range(n)]
+def random_bits(n, type, size, embed):
+        return [type(embed(random.randint(0,1)), size=size) for i in range(n)]
+
+if circuit == 'jolteon_forkaes64':
+    key1 = [sgf2n(0, size=simd) for _ in range(16)]
+    key2 = [sgf2n(1, size=simd) for _ in range(16)]
+    nonce = [cgf2n(0, size=simd) for _ in range(13)]
+
+    n_blocks = int(math.ceil(message_length/(128//8)))
+    ciphertext = [cgf2n(0, size=simd) for _ in range(n_blocks)]
+    tag = cgf2n(0, size=simd)
+    
+    start_timer(1)
+    check, message = jolteon_forkaes64_dec(key1, key2, nonce, ciphertext, tag)
+    stop_timer(1)
+elif circuit == 'aes_gcm64':
+    program.bit_length = 128
+    key = [sgf2n(0, size=simd) for _ in range(16)] #random_bytes(16, sgf2n)
+    nonce = [cgf2n(0, size=simd) for _ in range(12)] #random_bytes(12, cgf2n)
+    ciphertext = [cgf2n(0x0, size=simd) for _ in range(message_length)] #random_bytes(N, cgf2n)
+    tag = [cgf2n(0, size=simd) for _ in range(16)] #random_bytes(16, cgf2n)
+    start_timer(1)
+    check, message = aes_gcm_128_decrypt(ciphertext, tag, key, nonce)
+    stop_timer(1)
+elif circuit == 'espeon_forkaes64':
+    key1 = [sgf2n(0, size=simd) for _ in range(16)]
+    key2 = [sgf2n(1, size=simd) for _ in range(16)]
+    nonce = [cgf2n(0, size=simd) for _ in range(13)]
+
+    n_blocks = int(math.ceil(message_length/(128//8)))
+    ciphertext = [cgf2n(0, size=simd) for _ in range(n_blocks)]
+    tag = cgf2n(0, size=simd)
+    
+    start_timer(1)
+    check, message = espeon_forkaes64_dec(key1, key2, nonce, ciphertext, tag)
+    stop_timer(1)
+elif circuit == 'aes_gcm_siv64':
+    program.bit_length = 128
+    key = [sgf2n(0, size=simd) for _ in range(16)] #random_bytes(16, sgf2n)
+    nonce = [cgf2n(0, size=simd) for _ in range(12)] #random_bytes(12, cgf2n)
+    ciphertext = [cgf2n(0x0, size=simd) for _ in range(message_length)] #random_bytes(N, cgf2n)
+    tag = [cgf2n(0, size=simd) for _ in range(16)] #random_bytes(16, cgf2n)
+    start_timer(1)
+    check, message = aes_gcm_siv_128_decrypt(ciphertext, tag, key, nonce)
+    stop_timer(1)
+elif circuit == 'umbreon_forkskinny64_192':
+    nonce = random_bytes(12, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(12)]
+    ciphertext = random_bytes(message_length, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    key = Array.create_from([sgf2n(b) for k in key for b in cint(k).bit_decompose(bit_length=8)])
+
+    nonce = Array.create_from([cgf2n(b) for nonce_byte in nonce for b in nonce_byte.bit_decompose(bit_length=4)])
+    output = []
+    for byte in ciphertext:
+        bits = byte.bit_decompose(bit_length=8)
+        output.append(fk.embed4(bits[4:]))
+        output.append(fk.embed4(bits[:4]))
+    ciphertext = Array.create_from(output)
+    tag = Array.create_from([fk.embed4(byte.bit_decompose(bit_length=4)) for byte in tag])
+
+    @for_range(simd)
+    def _(i):
+        c = list(ciphertext)
+        t = list(tag)
+        k = list(key)
+        n = list(nonce)
+        start_timer(1)
+        open_tag, plaintext = umbreon_dec_forkskinny_64_192_n48(fk, [], c, t, k, n)
+        stop_timer(1)
+        print_ln('%s ' * len(plaintext), *[c.reveal() for c in plaintext])
+elif circuit == 'umbreon_forkskinny128_256':
+    nonce = random_bytes(14, cgf2n) # [sgf2n.get_input_from(0).reveal() for i in range(14)]
+    ciphertext = random_bytes(message_length, cgf2n) # [sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    key = Array.create_from([sgf2n(b) for k in key for b in cint(k).bit_decompose(bit_length=8)])
+
+    nonce = Array.create_from([cgf2n(b) for nonce_byte in nonce for b in nonce_byte.bit_decompose(bit_length=8)])
+    ciphertext = Array.create_from([fk.embed8(byte.bit_decompose(bit_length=8)) for byte in ciphertext])
+    tag = Array.create_from([fk.embed8(byte.bit_decompose(bit_length=8)) for byte in tag])
+
+    @for_range(simd)
+    def _(i):
+        c = list(ciphertext)
+        t = list(tag)
+        k = list(key)
+        n = list(nonce)
+        start_timer(1)
+        open_tag, plaintext = umbreon_dec_forkskinny_128_256_n112(fk, [], c, t, k, n)
+        stop_timer(1)
+        print_ln('%s ' * len(plaintext), *[c.reveal() for c in plaintext])
+elif circuit == 'jolteon_forkskinny64_192':
+    nonce = random_bytes(12, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(12)]
+    ciphertext = random_bytes(message_length, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    key = Array.create_from([sgf2n(b) for k in key for b in cint(k).bit_decompose(bit_length=8)])
+
+    nonce = Array.create_from([cgf2n(b) for nonce_byte in nonce for b in nonce_byte.bit_decompose(bit_length=4)])
+    output = []
+    for byte in ciphertext:
+        bits = byte.bit_decompose(bit_length=8)
+        output.append(fk.embed4(bits[4:]))
+        output.append(fk.embed4(bits[:4]))
+    ciphertext = Array.create_from(output)
+    tag = Array.create_from([fk.embed4(byte.bit_decompose(bit_length=4)) for byte in tag])
+
+    @for_range(simd)
+    def _(i):
+        c = list(ciphertext)
+        t = list(tag)
+        k = list(key)
+        n = list(nonce)
+        start_timer(1)
+        open_tag, plaintext = jolteon_dec_forkskinny_64_192_n48(fk, [], c, t, k, n)
+        stop_timer(1)
+        print_ln('%s ' * len(plaintext), *[c.reveal() for c in plaintext])
+elif circuit == 'jolteon_forkskinny128_256':
+    nonce = random_bytes(14, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(14)]
+    ciphertext = random_bytes(message_length, cgf2n) # [sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n) # [sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    key = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    key = Array.create_from([sgf2n(b) for k in key for b in cint(k).bit_decompose(bit_length=8)])
+
+    nonce = Array.create_from([cgf2n(b) for nonce_byte in nonce for b in nonce_byte.bit_decompose(bit_length=8)])
+    ciphertext = Array.create_from([fk.embed8(byte.bit_decompose(bit_length=8)) for byte in ciphertext])
+    tag = Array.create_from([fk.embed8(byte.bit_decompose(bit_length=8)) for byte in tag])
+
+    @for_range(simd)
+    def _(i):
+        c = list(ciphertext)
+        t = list(tag)
+        k = list(key)
+        n = list(nonce)
+        start_timer(1)
+        open_tag, plaintext = jolteon_dec_forkskinny_128_256_n112(fk, [], c, t, k, n)
+        stop_timer(1)
+        print_ln('%s ' * len(plaintext), *[c.reveal() for c in plaintext])
+elif circuit == 'espeon_forkskinny128_384':
+    nonce = random_bits(14 * 8, cgf2n, simd, embed=fk.cembed8) #[sgf2n.get_input_from(0).reveal() for i in range(14)]
+    ciphertext = random_bits(8*message_length, cgf2n, simd, embed=fk.cembed8) # [sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n, simd, embed=fk.cembed8) # [sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    key = random_bits(128, sgf2n, simd, embed=fk.cembed8)
+    start_timer(1)
+    check, message = espeon_forkskinny_128_384(fk, key, nonce, ciphertext, tag)
+    stop_timer(1)
+    print_ln('%s' + '%s ' * len(message), check, *[cell.reveal() for cell in message])
+else:
+    assert False, 'Unknown circuit'
