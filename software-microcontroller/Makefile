@@ -2,15 +2,13 @@ CC=gcc
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -Werror -fomit-frame-pointer -Iblake2s-opt-bin/include  -Imbedtls/include -O3
 LIB_OPT32=forkskinny-opt32/libforkskinnyopt32.a
 LIB_BLAKE2s=blake2s-opt-bin/lib/blake2s.lib
-LIB_MIMC=mimc-gmp/libmimcgmp.a
-LIB_GMP=gmp-6.2.1-bin64/lib/libgmp.a
+#LIB_MIMC=mimc-gmp/libmimcgmp.a
+#LIB_GMP=gmp-6.2.1-bin64/lib/libgmp.a
 LIB_FORKSKINNYC=forkskinny-c/libforkskinnyc.a
 LIB_SKINNYC=skinny-c/skinnyc.a
 LIB_MBED_CRYPTO=mbedtls/library/libmbedcrypto.a
 
 LDFLAGS= -L forkskinny-opt32/ -l forkskinnyopt32 \
-	-L mimc-gmp/ -l mimcgmp \
-	-L gmp-6.2.1-bin/lib/ -l gmp \
 	-L forkskinny-c/ -l forkskinnyc \
 	-L skinny-c/ -l skinnyc \
 	-L mbedtls/library/ -l mbedcrypto
@@ -18,7 +16,7 @@ LDFLAGS= -L forkskinny-opt32/ -l forkskinnyopt32 \
 OBJS=aes/aes.o aes/ghash.o aes/polyval.o aes/aes_gcm.o aes/aes_gcm_siv.o \
 	eevee-forkskinny/eevee_common.o eevee-forkskinny/umbreon.o eevee-forkskinny/espeon.o eevee-forkskinny/jolteon.o \
 	skinny-modes/skinny_modes.o aes/aes_xex_fork.o aes/jolteon_aes.o aes/espeon_aes.o
-LIBS=${LIB_BLAKE2s} ${LIB_REF} ${LIB_OPT32} ${LIB_MIMC} ${LIB_FORKSKINNYC} ${LIB_SKINNYC} ${LIB_MBED_CRYPTO}
+LIBS=${LIB_BLAKE2s} ${LIB_OPT32} ${LIB_FORKSKINNYC} ${LIB_SKINNYC} ${LIB_MBED_CRYPTO} #${LIB_MIMC}
 
 FORKSKINNY_BACKEND=EEVEE_FORKSKINNY_BACKEND_C #EEVEE_FORKSKINNY_BACKEND_OPT32
 
@@ -57,13 +55,13 @@ ${LIB_BLAKE2s}: blake2s-opt/
 	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) lib && \
 	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) install-lib
 
-${LIB_MIMC}: $(wildcard mimc-gmp/*.h) $(wildcard mimc-gmp/*.c)
-	cd mimc-gmp && \
-	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) all
+#${LIB_MIMC}: $(wildcard mimc-gmp/*.h) $(wildcard mimc-gmp/*.c)
+#	cd mimc-gmp && \
+#	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) all
 
-${LIB_GMP}: gmp-6.2.1-64bit/
-	cd mimc-gmp && \
-	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) ${LIB_GMP}
+#${LIB_GMP}: gmp-6.2.1-64bit/
+#	cd mimc-gmp && \
+#	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) ${LIB_GMP}
 
 ${LIB_SKINNYC}:
 	cd skinny-c/ && \

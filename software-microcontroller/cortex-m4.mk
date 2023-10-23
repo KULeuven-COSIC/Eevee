@@ -15,8 +15,8 @@ ARCH_FLAGS = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 LIB_OPT32=forkskinny-opt32/libforkskinnyopt32.a
 LIB_BLAKE2s=blake2s-opt-bin/lib/blake2s.lib
-LIB_MIMC=mimc-gmp/libmimcgmp.a
-LIB_GMP=gmp-6.2.1-bin32/lib/libgmp.a
+#LIB_MIMC=mimc-gmp/libmimcgmp.a
+#LIB_GMP=gmp-6.2.1-bin32/lib/libgmp.a
 LIB_FORKSKINNYC=forkskinny-c/libforkskinnyc.a
 LIB_SKINNYC=skinny-c/libskinnyc.a
 LIB_MBED_CRYPTO=mbedtls/library/libmbedcrypto.a
@@ -25,8 +25,6 @@ all: umbreon_benchmark_64_192.bin \
 	umbreon_benchmark_128_256.bin \
 	htmac_skinny_benchmark_128_256.bin \
 	pmac_skinny_benchmark_128_256.bin \
-	htmac_mimc_benchmark_128.bin \
-	ppmac_mimc_benchmark_128.bin \
 	jolteon_benchmark_64_192.bin \
 	jolteon_benchmark_128_256.bin \
 	espeon_benchmark_128_256.bin \
@@ -49,14 +47,13 @@ CFLAGS		+= -std=c99 -O3 -fomit-frame-pointer\
 		   -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes \
 		   -Wundef -Wshadow \
 		   -I$(ARMNONEEABIDIR)/include -I$(OPENCM3DIR)/include \
-			 -Igmp-6.2.1-bin32/include \
 			 -Imbedtls/include \
 			 -Iblake2s-opt-bin/include \
 		   -fno-common $(ARCH_FLAGS) -MD \
 			 -DSTM32F4 -DAES_ASSEMBLY
 LDFLAGS		+= --static -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group \
 		   -T$(LDSCRIPT) -nostartfiles -Wl,--gc-sections,--no-print-gc-sections \
-		   $(ARCH_FLAGS) -L$(OPENCM3DIR)/lib -L gmp-6.2.1-bin32/lib -l gmp
+		   $(ARCH_FLAGS) -L$(OPENCM3DIR)/lib
 
 FORKSKINNY_BACKEND=EEVEE_FORKSKINNY_BACKEND_OPT32 #EEVEE_FORKSKINNY_BACKEND_C
 
@@ -64,7 +61,7 @@ OBJS=aes/aes.o aes/aes.s aes/ghash.o aes/polyval.o aes/aes_gcm.o aes/aes_gcm_siv
 	eevee-forkskinny/eevee_common.o eevee-forkskinny/umbreon.o eevee-forkskinny/espeon.o eevee-forkskinny/jolteon.o \
 	skinny-modes/skinny_modes.o aes/aes_xex_fork.o aes/jolteon_aes.o aes/espeon_aes.o
 
-LIBS=${LIB_BLAKE2s} ${LIB_OPT32} ${LIB_MIMC} ${LIB_GMP} ${LIB_FORKSKINNYC} ${LIB_SKINNYC} ${LIB_MBED_CRYPTO}
+LIBS=${LIB_BLAKE2s} ${LIB_OPT32} ${LIB_FORKSKINNYC} ${LIB_SKINNYC} ${LIB_MBED_CRYPTO} # ${LIB_MIMC} ${LIB_GMP}
 
 eevee-forkskinny/umbreon.o: eevee-forkskinny/umbreon.h eevee-forkskinny/eevee_common.h eevee-forkskinny/umbreon_core.c eevee-forkskinny/umbreon.c
 	${CC} ${CFLAGS} -D${FORKSKINNY_BACKEND} -c -o eevee-forkskinny/umbreon.o eevee-forkskinny/umbreon.c #-DEEVEE_VERBOSE
@@ -96,11 +93,11 @@ ${LIB_BLAKE2s}: blake2s-opt/
 	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) lib && \
 	CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) install-lib
 
-${LIB_MIMC}: $(wildcard mimc-gmp/*.h) $(wildcard mimc-gmp/*.c)
-	cd mimc-gmp/ && CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) -f cortex-m4.mk all
+#${LIB_MIMC}: $(wildcard mimc-gmp/*.h) $(wildcard mimc-gmp/*.c)
+#	cd mimc-gmp/ && CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) -f cortex-m4.mk all
 
-${LIB_GMP}: gmp-6.2.1-32bit/
-	cd mimc-gmp && CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) -f cortex-m4.mk ${LIB_GMP}
+#${LIB_GMP}: gmp-6.2.1-32bit/
+#	cd mimc-gmp && CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) -f cortex-m4.mk ${LIB_GMP}
 
 ${LIB_FORKSKINNYC}:
 	cd forkskinny-c/ && CC=${CC} CFLAGS="${CFLAGS}" $(MAKE) all
@@ -117,7 +114,7 @@ ${LIB_MBED_CRYPTO}: mbedtls/
 
 %.elf: %.o $(OBJS) $(COMMONDIR)/stm32f4_wrapper.o $(LDSCRIPT) ${LIBS}
 	$(LD) -o $@ $< $(OBJS) $(LDFLAGS) ${LIBS}
-%.o: %.c ${LIB_GMP}
+%.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $^
 
 clean:

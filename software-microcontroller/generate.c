@@ -9,7 +9,7 @@
 #include "eevee-forkskinny/jolteon.h"
 #include "eevee-forkskinny/espeon.h"
 
-#include "mimc-gmp/mimc-gmp.h"
+//#include "mimc-gmp/mimc-gmp.h"
 
 #include "forkskinny-opt32/internal-forkskinny.h"
 #include "forkskinny-c/forkskinny64-cipher.h"
@@ -32,8 +32,8 @@ static const char *ESPEON_FORKSKINNY_128_256 = "espeon_forkskinny_128_256";
 static const char *ESPEON_FORKSKINNY_128_384 = "espeon_forkskinny_128_384";
 static const char *HTMAC_SKINNY_128_256 = "htmac_skinny_128_256";
 static const char *PMAC_SKINNY_128_256 = "pmac_skinny_128_256";
-static const char *HTMAC_MIMC_128 = "htmac_mimc_128";
-static const char *PPMAC_MIMC_128 = "ppmac_mimc_128";
+//static const char *HTMAC_MIMC_128 = "htmac_mimc_128";
+//static const char *PPMAC_MIMC_128 = "ppmac_mimc_128";
 
 static const char *SKINNY_C_128_256 = "skinny_c_128_256";
 static const char *SKINNY_C_64_192 = "skinny_c_64_192";
@@ -80,18 +80,19 @@ typedef int (*aead_dec_f)(
   const unsigned char *k
 );
 
-typedef int (*mimc_aead_enc_f)(
-  /** ciphertext & tag destination buffer */
-  unsigned char *c,unsigned long long clen,
-  /** message and message length */
-  const unsigned char *m,unsigned long long mlen,
-  /** associated data and AD length */
-  const unsigned char *ad,unsigned long long adlen,
-  /** nonce **/
-  const unsigned char *npub,
-  /** key **/
-  const unsigned char *k
-);
+
+//typedef int (*mimc_aead_enc_f)(
+//  /** ciphertext & tag destination buffer */
+//  unsigned char *c,unsigned long long clen,
+//  /** message and message length */
+//  const unsigned char *m,unsigned long long mlen,
+//  /** associated data and AD length */
+//  const unsigned char *ad,unsigned long long adlen,
+//  /** nonce **/
+//  const unsigned char *npub,
+//  /** key **/
+//  const unsigned char *k
+//);
 
 typedef void (*skinny_enc_f)(
   /** ciphertext destination buffer */
@@ -171,6 +172,7 @@ int generate_f(int mlen, int samples, int keylen, int noncelen, int taglen, aead
   return 0;
 }
 
+/*
 void generate_mimc128(int mlen, int samples, mimc_aead_enc_f aead_enc) {
   unsigned char message[mlen];
   unsigned char key[16];
@@ -208,6 +210,7 @@ void generate_mimc128(int mlen, int samples, mimc_aead_enc_f aead_enc) {
     printf("\n");
   }
 }
+*/
 
 void generate_skinny(int samples, skinny_enc_f enc_f, unsigned blocksize, unsigned keysize) {
   unsigned char message[blocksize];
@@ -296,13 +299,13 @@ void forkskinny_128_256_enc(unsigned char *output_left, unsigned char *output_ri
 }
 
 int generate(const char *primitive, int mlen, int samples, int check) {
-  if(strncmp(HTMAC_MIMC_128, primitive, strlen(HTMAC_MIMC_128)) == 0) {
+  /*if(strncmp(HTMAC_MIMC_128, primitive, strlen(HTMAC_MIMC_128)) == 0) {
     generate_mimc128(mlen, samples, htmac_mimc_128_crypto_aead_encrypt);
     return 0;
   }else if(strncmp(PPMAC_MIMC_128, primitive, strlen(PPMAC_MIMC_128)) == 0) {
     generate_mimc128(mlen, samples, ppmac_mimc_128_crypto_aead_encrypt);
     return 0;
-  }
+  }*/
 
   if(strncmp(SKINNY_C_64_192, primitive, strlen(SKINNY_C_64_192)) == 0) {
     if(check) {
@@ -470,10 +473,10 @@ int check_supported_primitive(const char *input) {
     return 0;
   if (strncmp(PMAC_SKINNY_128_256, input, strlen(PMAC_SKINNY_128_256)) == 0)
     return 0;
-  if (strncmp(HTMAC_MIMC_128, input, strlen(HTMAC_MIMC_128)) == 0)
-    return 0;
-  if (strncmp(PPMAC_MIMC_128, input, strlen(PPMAC_MIMC_128)) == 0)
-    return 0;
+  //if (strncmp(HTMAC_MIMC_128, input, strlen(HTMAC_MIMC_128)) == 0)
+  //  return 0;
+  //if (strncmp(PPMAC_MIMC_128, input, strlen(PPMAC_MIMC_128)) == 0)
+  //  return 0;
   if (strncmp(ESPEON_FORKSKINNY_128_256, input, strlen(ESPEON_FORKSKINNY_128_256)) == 0)
     return 0;
   if (strncmp(ESPEON_FORKSKINNY_128_384, input, strlen(ESPEON_FORKSKINNY_128_384)) == 0)
@@ -519,8 +522,8 @@ int main(int argc, char* argv[]) {
     printf("\t\t%s\n", ESPEON_FORKSKINNY_128_384);
     printf("\t\t%s\n", HTMAC_SKINNY_128_256);
     printf("\t\t%s\n", PMAC_SKINNY_128_256);
-    printf("\t\t%s\n", HTMAC_MIMC_128);
-    printf("\t\t%s\n", PPMAC_MIMC_128);
+    //printf("\t\t%s\n", HTMAC_MIMC_128);
+    //printf("\t\t%s\n", PPMAC_MIMC_128);
     printf("\t\t%s\n", SKINNY_C_64_192);
     printf("\t\t%s\n", SKINNY_C_128_256);
     printf("\t\t%s\n", SKINNY_FK_64_192);
