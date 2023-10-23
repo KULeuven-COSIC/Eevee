@@ -8,7 +8,7 @@ We will first install MP-SPDZ to compile the "bytecode" for the experiments to b
 On your local PC,
 1. Pull the MP-SPDZ submodule: `git submodule update --init --recursive`
 2. Navigate into the `MP-SPDZ` folder and install all dependencies (cf [MP-SPDZ/REAMDE](MPC/MP-SPDZ/README.md) and [MP-SPDZ online documentation](https://mp-spdz.readthedocs.io/en/latest/index.html))
-    - on our servers (Ubuntu 22.04.2 LTS), we installed `apt-get install automake build-essential cmake git libboost-dev libboost-thread-dev libntl-dev libsodium-dev libssl-dev libtool m4 python3 texinfo yasm htop python3-pip`
+    - on our servers (Ubuntu 22.04.2 LTS), we installed `apt-get install automake build-essential cmake git libboost-dev libboost-thread-dev libntl-dev libsodium-dev libssl-dev libtool m4 python3 texinfo yasm htop python3-pip libgmp3-dev`
     - configure *USE_GF2N_LONG*: `echo "USE_GF2N_LONG = 0" > CONFIG.mine`
     - `make boost libote`
     - `make mascot-party.x`
