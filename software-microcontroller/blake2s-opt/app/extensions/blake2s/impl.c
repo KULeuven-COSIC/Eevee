@@ -195,7 +195,11 @@ blake2s_keyed_init(blake2s_state *S, const unsigned char *key, size_t keylen) {
 	unsigned char k[BLAKE2S_BLOCKBYTES] = {0};
 	if (keylen > BLAKE2S_KEYBYTES) {
 		fprintf(stderr, "key size larger than %u passed to blake2s_keyed_init", BLAKE2S_KEYBYTES);
+		#ifdef STM32F4
+		while(1) {};
+		#else
 		exit(-1);
+		#endif
 	} else {
 		memcpy(k, key, keylen);
 	}
@@ -373,7 +377,11 @@ blake2s_blocks_bootup(blake2s_state_internal *state, const unsigned char *in, si
 		blake2s_opt->blake2s_blocks(state, in, bytes, stride);
 	} else {
 		fprintf(stderr, "blake2s failed to startup\n");
+		#ifdef STM32F4
+		while(1) {};
+		#else
 		exit(1);
+		#endif
 	}
 }
 
