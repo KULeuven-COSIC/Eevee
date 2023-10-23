@@ -1,12 +1,14 @@
+## IoT Benchmark
 This folder contains all benchmark code for the Eevee paper run the IoT device (ARM Cortex M4).
 The experiment/benchmark measures the number of cycles to encrypt a message of given length with a given mode of operation.
 It is set up as follows (where we use `umbreon_forkskinny_64_192` as example mode)
-  1. The binary for primitive is flashed to the microcontroller (here: `umbreon_benchmark_64_192.bin`). Flashing depends on the exact model and manufacturer of the M4. We used [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html).
-  2. Test vectors are generated using `./generate.x umbreon_forkskinny_64_192 100 1000 > vectors_umbreon_forkskinny_64_192` (here: creates 1000 vectors of 100 byte messages)
-  3. The microcontroller is connected to the PC, and the experiment script is started `python3 run-experiment.py--samples vectors_umbreon_forkskinny_64_192 -o cycles_umbreon_forkskinny_64_192`.
-     The script synchronizes with the microcontroller, sends a key, nonce and message to encrypt and receives the ciphertext, tag and cyclecount. The script checks that the ciphertext/tag is correct and writes the cyclecount into the output file `cycles_umbreon_forkskinny_64_192`. (Note that the device mount point `/dev/ttyUSB0` may differ depending on the setup. This must be changed in `run-experiment.py`.)
+  1. The binary for the primitive is built.
+  2. The binary for the primitive is flashed to the microcontroller (here: `umbreon_benchmark_64_192.bin`). Flashing depends on the exact model and manufacturer of the M4. We used [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html).
+  3. Test vectors are generated using `./generate.x umbreon_forkskinny_64_192 100 1000 > vectors_umbreon_forkskinny_64_192` (here: creates 1000 vectors of 100 byte messages).
+  4. The microcontroller is connected to the PC, and the experiment script is started `python3 run-experiment.py--samples vectors_umbreon_forkskinny_64_192 -o cycles_umbreon_forkskinny_64_192`.
+     The script synchronizes with the microcontroller, sends a key, nonce and message to encrypt and receives the ciphertext, tag and cyclecount. The script checks that the ciphertext/tag is correct and writes the cyclecount into the output file `cycles_umbreon_forkskinny_64_192`. This is repeated for all vectors in the input file. (Note that the device mount point `/dev/ttyUSB0` may differ depending on the setup. This must be changed in `run-experiment.py`.)
 
-The process described above can be repeated for different message lengths and modes of operation. In the following, we describe how the board is setup, how to compile the benchmark code and more.
+The process described above can be repeated for different message lengths and modes of operation. In the following, we describe how the board is set up, how to compile the benchmark code and more.
 
 ### Board Setup
 We use the STM32F407G-DISC1 board that runs the benchmark code. The timing results
@@ -30,61 +32,61 @@ Prerequisites
 Code
   - To build `generate.x` on the host PC, run `make generate.x`
   - To build `*.bin` on the host PC (cross-compile), run `make -f cortex-m4.mk all`.
-  You may need to run `make -f cortex-m4.mk clean` if the linker reports `file not recognized: file format not recognized`.
+  You may need to run `make -f cortex-m4.mk clean` and compile again if the linker reports `file not recognized: file format not recognized`.
 
 ### Executables
 - `generate.x` outputs test vectors for a selected mode/cipher of a given length.
-These are sent to the device with `run-experiment.py`.
-Example usage
-```
-$> ./generate.x
-./generate.x [--check] primitive (mlen samples)+
-	--check:	 check if encryption produces a valid ciphertext
-	supported primitives:
-		umbreon_forkskinny_64_192
-		umbreon_forkskinny_128_256
-		jolteon_forkskinny_64_192
-		jolteon_forkskinny_128_256
-		espeon_forkskinny_128_256
-		espeon_forkskinny_128_384
-		htmac_skinny_128_256
-		pmac_skinny_128_256
-		htmac_mimc_128
-		ppmac_mimc_128
-		skinny_c_64_192
-		skinny_c_128_256
-		skinny_fk_64_192
-		skinny_fk_128_256
-		forkskinny_c_64_192
-		forkskinny_c_128_256
-		forkskinny_64_192
-		forkskinny_128_256
-		aes_gcm_siv_128
-		aes_gcm_128
-		jolteon_aes_128
-		espeon_aes_128
-
-	mlen samples: the number of testvectors to generate for each message length mlen
-```
-I.e., `./generate.x --check jolteon_forkskinny_64_192 55 123` outputs 123 samples of 55-byte long message/ciphertext pairs, encrypted by Jolteon[Forkskinny-64-192], in the following format: `<key> <nonce> <message> <ciphertext> <tag>` where bytes are encoded in hexadecimal. One sample per line. Note that `--check` is not implemented for all primitives.
+	These are sent to the device with `run-experiment.py`.
+	Example usage
+	```
+	$> ./generate.x
+	./generate.x [--check] primitive (mlen samples)+
+		--check:	 check if encryption produces a valid ciphertext
+		supported primitives:
+			umbreon_forkskinny_64_192
+			umbreon_forkskinny_128_256
+			jolteon_forkskinny_64_192
+			jolteon_forkskinny_128_256
+			espeon_forkskinny_128_256
+			espeon_forkskinny_128_384
+			htmac_skinny_128_256
+			pmac_skinny_128_256
+			htmac_mimc_128
+			ppmac_mimc_128
+			skinny_c_64_192
+			skinny_c_128_256
+			skinny_fk_64_192
+			skinny_fk_128_256
+			forkskinny_c_64_192
+			forkskinny_c_128_256
+			forkskinny_64_192
+			forkskinny_128_256
+			aes_gcm_siv_128
+			aes_gcm_128
+			jolteon_aes_128
+			espeon_aes_128
+	
+		mlen samples: the number of testvectors to generate for each message length mlen
+	```
+	I.e., `./generate.x --check jolteon_forkskinny_64_192 55 123` outputs 123 samples of 55-byte long message/ciphertext pairs, encrypted by Jolteon-Forkskinny-64-192, in the following format: `<key> <nonce> <message> <ciphertext> <tag>` where bytes are encoded in hexadecimal. One sample per line. Note that `--check` is not implemented for all primitives.
 
 - `run-experiment.py` Given a file with test vectors in the format of `generate.x`, sends a test vector (key, nonce, message) to the connected M4, receives ciphertext, tag and the cycle count. The script compares the received ciphertext and tag with the test vector to check for correctness and saves the cyclecount.
-```
-$> python run-experiment.py -h
-usage: run-experiment.py [-h] --samples SAMPLEPATH -o OUTPUT
-                         [--cyclecounts N_CYCLECOUNTS]
-Run experiment on connected microcontroller
-options:
-  -h, --help            show this help message and exit
-  --samples SAMPLEPATH  Path to file containing testvector samples
-  -o OUTPUT             Path to output file
-  --cyclecounts N_CYCLECOUNTS
-                        Nr of expected cycle counts returned by the
-                        controller. Defaults to 1
-```
-I.e., `python run-exeriment.py --samples results/jolteon_fk_64_192_m8 -o jolteon_fk_64_192_m8_cycles` reads the test vectors in `results/jolteon_fk_64_192_m8`, sends them to the device and writes the reported cycle count in `jolteon_fk_64_192_m8_cycles` (line by line).
+	```
+	$> python run-experiment.py -h
+	usage: run-experiment.py [-h] --samples SAMPLEPATH -o OUTPUT
+	                         [--cyclecounts N_CYCLECOUNTS]
+	Run experiment on connected microcontroller
+	options:
+	  -h, --help            show this help message and exit
+	  --samples SAMPLEPATH  Path to file containing testvector samples
+	  -o OUTPUT             Path to output file
+	  --cyclecounts N_CYCLECOUNTS
+	                        Nr of expected cycle counts returned by the
+	                        controller. Defaults to 1
+	```
+	I.e., `python run-exeriment.py --samples results/jolteon_fk_64_192_m8 -o jolteon_fk_64_192_m8_cycles` reads the test vectors in `results/jolteon_fk_64_192_m8`, sends them to the device and writes the reported cycle count in `jolteon_fk_64_192_m8_cycles` (line by line).
 
-- `*.bin` are executables that can be flashed to the M4 to run the indicated mode, e.g., `jolteon_benchmark_64_192.bin` runs the benchmark that encrypts the received key, nonce and message with Jolteon[Forkskinny-64-192].
+- `*.bin` are executables that can be flashed to the M4 to run the indicated mode, e.g., `jolteon_benchmark_64_192.bin` runs the benchmark that encrypts the received key, nonce and message with Jolteon-Forkskinny-64-192.
 
 ### Implementations
 - Primitives
