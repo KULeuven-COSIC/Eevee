@@ -1,0 +1,7 @@
+Starting timer 1 at 0 (0 MB) after 2.1118e-05
+Stopped timer 1 at 42.1446 (517.889 MB)
+The following timing is exclusive preprocessing.
+Time = 42.4216 seconds 
+Time1 = 42.1446 seconds (517.889 MB)
+Data sent = 518.402 MB in ~870 rounds (party 1)
+Global data sent = 1036.8 MB (all parties)

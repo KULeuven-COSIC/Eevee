@@ -1,0 +1,42 @@
+version: 1.0-basic
+rspec: nodes.rspec
+upload:
+    - htmac-skinny-parallel-8-1000-0.bc
+    - htmac-skinny-parallel-8-1000.sch
+    - direct: |
+        0
+      nodes: node0
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        1
+      nodes: node1
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        2
+      nodes: node2
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        3
+      nodes: node3
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        4
+      nodes: node4
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        2
+      path: ~/MP-SPDZ/nplayers
+      nodes: [node0,node1]
+    - direct: |
+        htmac-skinny-parallel-8-1000
+      path: ~/MP-SPDZ/target
+      nodes: [node0,node1]
+execute: 
+    - bundled: setup-experiment.sh
+      nodes: [node0, node1]
+    - bundled: run-prep.sh
+      nodes: [node0, node1]
+    - bundled: run-online.sh
+      nodes: [node0, node1]
+    - bundled: run-both.sh
+      nodes: [node0, node1]

@@ -1,0 +1,8 @@
+Using security parameter 40
+Starting timer 1 at 0 (0 MB) after 1.6471e-05
+Stopped timer 1 at 1.06 (23.9325 MB)
+The following benchmarks are excluding preprocessing (offline phase).
+Time = 1.0791 seconds 
+Time1 = 1.06 seconds (23.9325 MB)
+Data sent = 23.9328 MB in ~619 rounds (party 2; use '-v' for more details)
+Global data sent = 95.7168 MB (all parties)

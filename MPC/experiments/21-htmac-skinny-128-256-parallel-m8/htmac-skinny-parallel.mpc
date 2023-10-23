@@ -1,0 +1,119 @@
+from Programs.Source.testutils import import_path
+from Programs.Source.utils import tag_check
+from Compiler.program import Program
+skinny = import_path('skinny_gf2n', 'Programs/Source/skinny_gf2n2.mpc')
+program.bit_length = 128
+
+import sys
+
+nparallel = int(sys.argv[3])
+
+N = int(sys.argv[2])
+
+import random
+import math
+random.seed(N)
+
+def random_bytes(n, type):
+    return [type(skinny.cembed8(random.randint(0,255)), size=nparallel) for i in range(n)]
+def random_bits(n, type):
+    return [type(skinny.cembed8(random.randint(0,1)), size=nparallel) for i in range(n)]
+
+def conv1_8(x):
+    l =  [[int(c, 16) & 0x1, (int(c, 16) >> 1) & 0x1, (int(c, 16) >> 2) & 0x1, (int(c, 16) >> 3) & 0x1] for c in x]
+    r = []
+    for i in range(0,len(l), 2):
+        r.append(l[i+1])
+        r.append(l[i])
+    # flatten
+    return [b for cell in r for b in cell]
+
+def digest(blocks, nonce):
+    sigma = cint(0, size=nparallel)
+    for block in [nonce] + blocks:
+        bits = [cint(b) for cell in block for b in skinny.bit_decompose8(cell)]
+        element = sum((2**i * bits for i,bits in enumerate(bits)))
+        sigma += element
+    hash = sigma.digest(16)
+    bits = hash.bit_decompose()
+    block = [skinny.skinny_embed8([cgf2n(b,size=b.size) for b in bits[8*i:8*i+8]]) for i in range(16)]
+    return block
+
+def ctr(n_blocks, key, nonce):
+    assert n_blocks < 2**16-1
+    zero = cgf2n(0, size=nparallel)
+    one = cgf2n(1, size=nparallel)
+    keystream = []
+    for ctr in range(n_blocks):
+        tweakey = key + [one]
+        tweakey += [zero] * 111
+        for i in range(16):
+            tweakey.append(one if (ctr >> i) & 0x1 > 0 else zero)
+        schedule = skinny.expand_key(tweakey[:128], tweakey[128:], skinny.SKINNY_128_256)
+        input_block = list(nonce)
+        rem = len(input_block) % 16
+        if rem != 0:
+            input_block.append(one)
+            input_block += [zero] * (16-rem-1)
+        keystream_block = skinny.skinny_128_256_enc(input_block, schedule)
+        keystream += keystream_block
+
+    return keystream
+
+def encrypt(message, key, nonce):
+    assert len(nonce) == 6, f'{len(nonce)}: {nonce}'
+
+    n_blocks = int(math.ceil(len(message)/16.0))
+    # Program.prog.curr_tape.start_new_basicblock(name='encrypt-ctr')
+    keystream = ctr(n_blocks, key, nonce)
+    # encrypt
+    ciphertext = [(m + k).reveal() for m,k in zip(message, keystream[:len(message)])]
+    # group into blocks
+    ciphertext_blocks = [ciphertext[16*i:16*i+16] for i in range(len(message) // 16)]
+    # incomplete block, if any
+    if len(ciphertext) % 16 != 0:
+        ciphertext_blocks.append(ciphertext[len(ciphertext) - (len(ciphertext)%16):])
+    # Program.prog.curr_tape.start_new_basicblock(name='encrypt-digest')
+    h = digest(ciphertext_blocks, nonce)
+    schedule = skinny.expand_key(key, [cgf2n(0, size=nparallel)] * 128, skinny.SKINNY_128_256)
+    tag = skinny.skinny_128_256_enc(h, schedule)
+    return ciphertext, [cell.reveal() for cell in tag]
+
+def decrypt(ciphertext, tag, key, nonce):
+    #assert len(ciphertext) % 16 == 0
+    assert len(nonce) == 6, f'{len(nonce)}: {nonce}'
+
+    n_blocks = int(math.ceil(len(ciphertext)/16.0))
+    # Program.prog.curr_tape.start_new_basicblock(name='decrypt-ctr')
+    keystream = ctr(n_blocks, key, nonce)
+    # decrypt
+    message = [(c - k) for c,k in zip(ciphertext, keystream[:len(ciphertext)])]
+    # group into blocks
+    ciphertext_blocks = [ciphertext[16*i:16*i+16] for i in range(len(message) // 16)]
+    # incomplete block, if any
+    if len(ciphertext) % 16 != 0:
+        ciphertext_blocks.append(ciphertext[len(ciphertext) - (len(ciphertext)%16):])
+    # Program.prog.curr_tape.start_new_basicblock(name='decrypt-digest')
+    h = digest(ciphertext_blocks, nonce)
+    schedule = skinny.expand_key(key, [cgf2n(1, size=nparallel)] * 128, skinny.SKINNY_128_256)
+    computed_tag = skinny.skinny_128_256_enc(h, schedule)
+    # Program.prog.curr_tape.start_new_basicblock(name='decrypt-tag-check')
+    check = tag_check(tag, computed_tag, skinny.skinny_bit_decompose8)
+    return check.reveal(), message
+
+key = random_bits(128, sgf2n)
+nonce = random_bytes(6, cgf2n)
+
+# message = random_bytes(N, sgf2n)
+ciphertext = random_bytes(N, cgf2n)
+tag = random_bytes(16, cgf2n)
+
+# ciphertext, tag = encrypt(message, key, nonce)
+start_timer(1)
+check, message2 = decrypt(ciphertext, tag, key, nonce)
+stop_timer(1)
+# for i in range(len(check)):
+#    @if_(check[i] != 1)
+#     def f():
+#         print_ln(f"MAC ERROR {i}. PANIC")
+print_ln('Decrypted message: ' + ('%s ' * N), *[cell.reveal() for cell in message2])

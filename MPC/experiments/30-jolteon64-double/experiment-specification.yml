@@ -1,0 +1,41 @@
+version: 1.0-basic
+rspec: nodes.rspec
+upload:
+    - run-experiment.py
+    - jolteon64_parallel_double-128-500-0.bc
+    - jolteon64_parallel_double-128-500.sch
+    - jolteon64_parallel_double-500-10-0.bc
+    - jolteon64_parallel_double-500-10.sch
+    - run-prep.sh
+    - run-online.sh
+    - run-both.sh
+    - setup-experiment.sh
+    - direct: |
+        0
+      nodes: node0
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        1
+      nodes: node1
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        2
+      nodes: node2
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        3
+      nodes: node3
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        4
+      nodes: node4
+      path: ~/MP-SPDZ/playerid
+    - direct: |
+        2
+      path: ~/MP-SPDZ/nplayers
+      nodes: [node0,node1]
+execute: 
+    - direct: |
+        #!/bin/bash
+        python3 -u run-experiment.py --detach jolteon64_parallel_double-128-500 jolteon64_parallel_double-500-10
+      nodes: [node0, node1]
