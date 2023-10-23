@@ -1,0 +1,13 @@
+*.o
+*.x
+*.bin
+*.d
+*.elf
+blake2s-opt-bin/
+gmp-6.2.1-bin32/
+gmp-6.2.1-bin64/
+gmp-6.2.1-32bit/
+gmp-6.2.1-64bit/
+gmp-6.2.1-64bit/doc/gmp.info
+gmp-6.2.1-64bit/doc/gmp.info-1
+gmp-6.2.1-64bit/doc/gmp.info-2
