@@ -1,0 +1,9 @@
+[submodule "software-microcontroller/libopencm3"]
+	path = software-microcontroller/libopencm3
+	url = https://github.com/libopencm3/libopencm3
+[submodule "software-microcontroller/blake2s-opt"]
+	path = software-microcontroller/blake2s-opt
+	url = https://github.com/floodyberry/blake2s-opt.git
+[submodule "MPC/MP-SPDZ"]
+	path = MPC/MP-SPDZ
+	url = https://github.com/data61/MP-SPDZ.git
