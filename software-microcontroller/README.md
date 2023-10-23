@@ -26,7 +26,7 @@ The Serial-to-USB converter is then connected via USB to the PC. If the pins of 
 
 ### Build
 Prerequisites
-  - GCC ARM toolchain (e.g., `arm-none-eabi-gcc` and related packages)
+  - GCC ARM toolchain (e.g., `gcc-arm-none-eabi` and related packages)
   - libopencm3: Make sure the submodule is pulled (`git submodule update --init --recursive`), then `cd libopencm3 && make`
 
 Code
