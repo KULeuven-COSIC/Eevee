@@ -27,7 +27,7 @@ def digest(blocks, nonce):
 def pack(blocks, base_type):
     n = len(blocks)
     if n == 1:
-        return blocks
+        return blocks[0]
     return [base_type([blocks[j][i] for j in range(n)], size=n) for i in range(len(blocks[0]))]
 
 def unpack(block):

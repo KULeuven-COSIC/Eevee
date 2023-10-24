@@ -188,7 +188,7 @@ elif circuit == 'pmac_skinny128_256':
     key = random_bits(128, sgf2n, 1) # [sgf2n(b) for b in conv1_8('26fb5fba464687c1ccb0da6ab42b178f')]
     nonce = random_bytes(6, cgf2n, embed=fk.cembed8) #[cgf2n(skinny.skinny_cembed8(0x12)), cgf2n(skinny.skinny_cembed8(0x34)), cgf2n(skinny.skinny_cembed8(0x56)), cgf2n(skinny.skinny_cembed8(0x78)), cgf2n(skinny.skinny_cembed8(0x9a)), cgf2n(skinny.skinny_cembed8(0xbc))]
 
-    ciphertext = random_bytes(message_length, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(N)]
+    ciphertext = random_bytes(16 * int(math.ceil(message_length/16.0)), cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(N)]
     tag = random_bytes(16, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(16)]
 
     @for_range(simd)
@@ -205,7 +205,7 @@ elif circuit == 'htmac_skinny128_256':
     nonce = random_bytes(6, cgf2n, embed=fk.cembed8) #[cgf2n(skinny.skinny_cembed8(0x12)), cgf2n(skinny.skinny_cembed8(0x34)), cgf2n(skinny.skinny_cembed8(0x56)), cgf2n(skinny.skinny_cembed8(0x78)), cgf2n(skinny.skinny_cembed8(0x9a)), cgf2n(skinny.skinny_cembed8(0xbc))]
     tag = random_bytes(16, cgf2n)
 
-    ciphertext = random_bytes(message_length, cgf2n)
+    ciphertext = random_bytes(16 * int(math.ceil(message_length/16.0)), cgf2n)
 
     @for_range(simd)
     def _(i):
