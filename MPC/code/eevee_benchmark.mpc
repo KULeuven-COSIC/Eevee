@@ -6,6 +6,7 @@ from Programs.Source.eevee_aes import jolteon_forkaes64_dec, espeon_forkaes64_de
 from Programs.Source.aes_gcm import aes_gcm_128_decrypt
 from Programs.Source.aes_gcm_siv import aes_gcm_siv_128_decrypt
 from Programs.Source.eevee_gf2n import umbreon_dec_forkskinny_64_192_n48, umbreon_dec_forkskinny_128_256_n112, jolteon_dec_forkskinny_64_192_n48, jolteon_dec_forkskinny_128_256_n112, espeon_forkskinny_128_384
+from Programs.Source.skinny_modes import dec_pmac_skinny128_256, dec_htmac_skinny128_256
 import Programs.Source.forkskinny_gf2n as fk
 
 if len(sys.argv) < 4:
@@ -29,8 +30,9 @@ def random_bytes(n, type, size=None, embed=None):
         return [type(em(random.randint(0,15))) for i in range(n)]
     else:
         return [type(em(random.randint(0,15)),size=size) for i in range(n)]
-def random_bits(n, type, size, embed):
-        return [type(embed(random.randint(0,1)), size=size) for i in range(n)]
+def random_bits(n, type, size, embed=None):
+    em = embed if embed != None else lambda x: x
+    return [type(em(random.randint(0,1)), size=size) for i in range(n)]
 
 if circuit == 'jolteon_forkaes64':
     key1 = [sgf2n(0, size=simd) for _ in range(16)]
@@ -182,5 +184,37 @@ elif circuit == 'espeon_forkskinny128_384':
     check, message = espeon_forkskinny_128_384(fk, key, nonce, ciphertext, tag)
     stop_timer(1)
     print_ln('%s' + '%s ' * len(message), check, *[cell.reveal() for cell in message])
+elif circuit == 'pmac_skinny128_256':
+    key = random_bits(128, sgf2n, 1) # [sgf2n(b) for b in conv1_8('26fb5fba464687c1ccb0da6ab42b178f')]
+    nonce = random_bytes(6, cgf2n, embed=fk.cembed8) #[cgf2n(skinny.skinny_cembed8(0x12)), cgf2n(skinny.skinny_cembed8(0x34)), cgf2n(skinny.skinny_cembed8(0x56)), cgf2n(skinny.skinny_cembed8(0x78)), cgf2n(skinny.skinny_cembed8(0x9a)), cgf2n(skinny.skinny_cembed8(0xbc))]
+
+    ciphertext = random_bytes(message_length, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(N)]
+    tag = random_bytes(16, cgf2n) #[sgf2n.get_input_from(0).reveal() for i in range(16)]
+
+    @for_range(simd)
+    def _(i):
+        start_timer(1)
+        check, message = dec_pmac_skinny128_256(ciphertext, tag, key, nonce)
+        stop_timer(1)
+        #check = check.reveal()
+        #@if_(check != 1)
+        #def f():
+        #    print_ln("MAC ERROR. PANIC")
+elif circuit == 'htmac_skinny128_256':
+    key = random_bits(128, sgf2n, 1) #[sgf2n(b) for b in conv1_8('26fb5fba464687c1ccb0da6ab42b178f')]
+    nonce = random_bytes(6, cgf2n, embed=fk.cembed8) #[cgf2n(skinny.skinny_cembed8(0x12)), cgf2n(skinny.skinny_cembed8(0x34)), cgf2n(skinny.skinny_cembed8(0x56)), cgf2n(skinny.skinny_cembed8(0x78)), cgf2n(skinny.skinny_cembed8(0x9a)), cgf2n(skinny.skinny_cembed8(0xbc))]
+    tag = random_bytes(16, cgf2n)
+
+    ciphertext = random_bytes(message_length, cgf2n)
+
+    @for_range(simd)
+    def _(i):
+        start_timer(1)
+        check, message = dec_htmac_skinny128_256(ciphertext, tag, key, nonce)
+        stop_timer(1)
+        #check = check.reveal()
+        #@if_(check != 1)
+        #def f():
+        #    print_ln("MAC ERROR. PANIC")
 else:
     assert False, 'Unknown circuit'
