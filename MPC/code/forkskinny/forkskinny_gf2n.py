@@ -9,9 +9,9 @@ if "SKINNY_TARGET_FIELD" in os.environ:
 else:
     USE_F128_EMBEDDING = False
 if USE_F128_EMBEDDING:
-    print('Generating (Fork)SKINNY implemnentation for GF(2^128) (USE_GF2N_LONG=1)')
+    print('Generating (Fork)SKINNY implementation for GF(2^128) (USE_GF2N_LONG=1)')
 else:
-    print('Generating (Fork)SKINNY implemnentation for GF(2^40) (USE_GF2N_LONG=0)')
+    print('Generating (Fork)SKINNY implementation for GF(2^40) (USE_GF2N_LONG=0)')
 
 class VectorConstant:
     def __init__(self, f):
