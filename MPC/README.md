@@ -123,8 +123,48 @@ On your local PC,
 
 We hope these information are sufficient to show functionality.
 
+## Experiment (E2)
+1. Use `bash compile-all-aes.sh <message length> <simd>` to compile all AES-based instantiations for a given message length (in bytes) and simd. Use message length 8 and 100 bytes and simd 10.
+2. Use `bash compile-all-skinny.sh <message length> <simd>` to compile all (Fork)Skinny-based instantiations with the same parameters as step 1.
+3. Configure **USE_GF2N_LONG = 1** (see Setup, then run `make clean && make mascot-party.x`)
+4. Use `bash local-run-all-aes.sh <message length> <simd>` to run all AES-based instantiations locally.
+5. Configure **USE_GF2N_LONG = 0** (see Setup, then run `make clean && make mascot-party.x`)
+6. Use `bash local-run-all-skinny.sh <message length> <simd>` to run all (Fork)Skinny-based instantiations locally.
 
-### Benchmarking Environment to Reproduce
+The scripts create log files named `log-<circuit>-<simd>-<message length>`, for instance `log-jolteon_forkaes64-10-8`
+```
+Using security parameter 40
+No modulus found in Player-Data//2-p-128/Params-Data, generating 128-bit prime
+Starting timer 1 at 0 (0 MB, 0 rounds) after 2.3995e-05
+Stopped timer 1 at 3.76593 (430.367 MB, 1484 rounds)
+Compiler: ./compile.py eevee_benchmark jolteon_forkaes64 10 8
+	380 triples of SPDZ gf2n_long left
+	800 bits of SPDZ gf2n_long left
+Spent 0.109973 seconds (0.798256 MB, 637 rounds) on the online phase and 3.65623 seconds (429.61 MB, 888 rounds) on the preprocessing/offline phase.
+Communication details (rounds in parallel threads counted double):
+Broadcasting 0.017816 MB in 685 rounds, taking 0.0370786 seconds
+Exchanging one-to-one 361.407 MB in 192 rounds, taking 0.442673 seconds
+Receiving directly 1.14211 MB in 220 rounds, taking 0.0244658 seconds
+Receiving one-to-one 67.841 MB in 104 rounds, taking 0 seconds
+Sending directly 1.14211 MB in 220 rounds, taking 0.00560978 seconds
+Sending one-to-one 67.841 MB in 104 rounds, taking 0 seconds
+CPU time = 3.48544
+The following benchmarks are including preprocessing (offline phase).
+Time = 3.77221 seconds 
+Time1 = 3.76593 seconds (430.367 MB, 1484 rounds)
+Data sent = 430.408 MB in ~1525 rounds (party 0 only)
+Global data sent = 860.816 MB (all parties)
+Actual cost of program:
+  Type gf2n
+         21620        Triples
+         51200           Bits
+Coordination took 0.016355 seconds
+Command line: /MPC/MP-SPDZ/Scripts/../mascot-party.x 0 -v eevee_benchmark-jolteon_forkaes64-10-8 -pn 10320 -h localhost -N 2
+```
+where the important line is **Spent 0.109973 seconds (0.798256 MB, 637 rounds) on the online phase and 3.65623 seconds (429.61 MB, 888 rounds) on the preprocessing/offline phase.**.
+
+
+### Experiment (E3): Benchmarking Environment to Reproduce
 The benchmarks were run on up to 5 `pcgen05` machines in [imec's iLab.t Virtual Wall 2](https://doc.ilabt.imec.be/ilabt/virtualwall/hardware.html#virtual-wall-2).
 
 Machine spec
@@ -168,6 +208,11 @@ options:
   --detach              Start benchmark detached (default: False)
 ```
 For example, `python run-experiment.py eevee_benchmark-jolteon_forkskinny64_192-10-32 eevee_benchmark-jolteon_forkskinny128_256-10-32` first runs the benchmark for Jolteon-Forkskinny-64-192 and afterwards for Jolteon-Forkskinny-128-256. After the benchmarks complete, the script creates a tar file with all relevant log files named `res<i>.tar` for player `i`.
+
+### Experiment (E3): Execution
+1. Upload compiled `*.bc` and `*.sch` files to each server and move them next to `run-experiment.py`.
+2. Use `bash server-run-all-aes.sh <message length> <simd>` and `bash server-run-all-skinny.sh <message length> <simd>` on each server to start the respective benchmark which uses `run-experiment.py`.
+3. After each execution, download `res0.tar`, `res1.tar` and `res2.tar` from server 1, 2, 3. These archives contain the log file of each player for the respective benchmark. The format is similar to the log from experiment (E2).
 
 ### (Old) Experiments
 Experiments are defined in the [Espec](https://jfed.ilabt.imec.be/espec/) format and can be uploaded and run easily using [jFed](https://jfed.ilabt.imec.be/).
