@@ -4,15 +4,28 @@ The Eevee family stems from the paper "Let's Go Eevee! A Friendly and Suitable F
 
 If content of this repository has been useful to you for academic work, please consider citing
 ```
-@misc{cryptoeprint:2023/1361,
-      author = {Amit Singh Bhati and Erik Pohle and Aysajan Abidin and Elena Andreeva and Bart Preneel},
-      title = {Let's Go Eevee! A Friendly and Suitable Family of AEAD Modes for IoT-to-Cloud Secure Computation},
-      howpublished = {Cryptology ePrint Archive, Paper 2023/1361},
-      year = {2023},
-      doi = {10.1145/3576915.3623091},
-      note = {\url{https://eprint.iacr.org/2023/1361}},
-      url = {https://eprint.iacr.org/2023/1361}
+@inproceedings{Eevee,
+  author       = {Amit Singh Bhati and
+                  Erik Pohle and
+                  Aysajan Abidin and
+                  Elena Andreeva and
+                  Bart Preneel},
+  editor       = {Weizhi Meng and
+                  Christian Damsgaard Jensen and
+                  Cas Cremers and
+                  Engin Kirda},
+  title        = {Let's Go Eevee! {A} Friendly and Suitable Family of {AEAD} Modes for
+                  IoT-to-Cloud Secure Computation},
+  booktitle    = {Proceedings of the 2023 {ACM} {SIGSAC} Conference on Computer and
+                  Communications Security, {CCS} 2023, Copenhagen, Denmark, November
+                  26-30, 2023},
+  pages        = {2546--2560},
+  publisher    = {{ACM}},
+  year         = {2023},
+  url          = {https://doi.org/10.1145/3576915.3623091},
+  doi          = {10.1145/3576915.3623091},
 }
+
 ```
 
 ## Artifact Evaluation
